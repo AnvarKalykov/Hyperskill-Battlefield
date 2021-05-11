@@ -12,6 +12,7 @@ public class Battlefield {
     final char EMPTY = '~';
     char[][] filed = new char[SIZE][SIZE];
     Ship[] ships;
+    Scanner scanner = new Scanner(System.in);
 
     /**
      * Constructor of the playing field.
@@ -32,7 +33,6 @@ public class Battlefield {
      */
 
     public void initField() {
-        Scanner scanner = new Scanner(System.in);
         System.out.println(this.toString());
         ships = new Ship[5];
         ships[0] = new Ship(AIRCRAFT_SIZE, "Aircraft Carrier");
@@ -106,6 +106,34 @@ public class Battlefield {
             }
         }
         return true;
+    }
+
+    /**
+     * Simplified method of shooting. For now just to pass the test.
+     */
+    public void makeShot(){
+        System.out.println("The game starts!\n");
+        System.out.println(this.toString());
+        System.out.println("Take a shot!");
+        while (true) {
+            String shotCell = scanner.nextLine();
+            int shotRow = shotCell.charAt(0) - 65;
+            int shotColumn = Integer.parseInt(shotCell.substring(1)) - 1;
+            if (shotRow < 0 || shotRow > 9 || shotColumn < 0 || shotColumn > 9) {
+                System.out.println("Error! You entered the wrong coordinates! Try again:");
+            } else {
+                if (this.filed[shotRow][shotColumn] == EMPTY) {
+                    this.filed[shotRow][shotColumn] = 'M';
+                    System.out.println(this.toString());
+                    System.out.println("You missed!");
+                } else {
+                    this.filed[shotRow][shotColumn] = 'X';
+                    System.out.println(this.toString());
+                    System.out.println("You hit a ship!");
+                }
+                break;
+            }
+        }
     }
 
     @Override
