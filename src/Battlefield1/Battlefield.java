@@ -10,6 +10,9 @@ public class Battlefield {
     final int CRUISER_SIZE = 3;
     final int DESTROYER_SIZE = 2;
     final char EMPTY = '~';
+    final char MISSED = 'M';
+    final char HIT = 'X';
+    final char SHIP = 'O';
     char[][] filed = new char[SIZE][SIZE];
     Ship[] ships;
     Scanner scanner = new Scanner(System.in);
@@ -18,7 +21,6 @@ public class Battlefield {
      * Constructor of the playing field.
      * Creating an array of fields with the specified size.
      */
-
     public Battlefield() {
         for (int i = 0; i < SIZE; i++) {
             for (int j = 0; j < SIZE; j++) {
@@ -31,8 +33,7 @@ public class Battlefield {
      * Fill the playing field with ships.
      * We ask the user for coordinates and if they are suitable, we pass them to the ship objects.
      */
-
-    public void initField() {
+    public void initfield() {
         System.out.println(this.toString());
         ships = new Ship[5];
         ships[0] = new Ship(AIRCRAFT_SIZE, "Aircraft Carrier");
@@ -41,7 +42,7 @@ public class Battlefield {
         ships[3] = new Ship(CRUISER_SIZE, "Cruiser");
         ships[4] = new Ship(DESTROYER_SIZE, "Destroyer");
         for (Ship ship : ships) {
-            System.out.printf("Enter the coordinates of the %s (%d cells)\n",ship.getName(),ship.getSize());
+            System.out.printf("Enter the coordinates of the %s (%d cells):\n", ship.getName(), ship.getSize());
             while (true) {
                 String[] coordinates = scanner.nextLine().split(" ");
                 int rowBegin = coordinates[0].charAt(0) - 65;
@@ -51,8 +52,7 @@ public class Battlefield {
                 if (rowBegin > rowEnd) {
                     int tmp = rowEnd;
                     rowEnd = rowBegin;
-                    rowBegin = rowEnd;
-
+                    rowBegin = tmp;
                 }
                 if (columnBegin > columnEnd) {
                     int tmp = columnEnd;
@@ -68,24 +68,26 @@ public class Battlefield {
             }
         }
     }
+
     /**
      * Place the ship on the playing field, if it does not interfere with other ships
-     * @param _rowBegin - int, coordinate of the beginning of the ship.
+     *
+     * @param _rowBegin    - int, coordinate of the beginning of the ship.
      * @param _columnBegin - int, coordinate of the beginning of the ship.
-     * @param _rowEnd - int, coordinate of the end of the ship.
-     * @param _columnEnd - int, coordinate of the end of the ship.
-     * @param _ship - Ship, object that is placed on the field.
+     * @param _rowEnd      - int, coordinate of the end of the ship.
+     * @param _columnEnd   - int, coordinate of the end of the ship.
+     * @param _ship        - Ship, object that is placed on the field.
      * @return - boolean, true if placing is success.
      */
     public boolean putShipOnField(int _rowBegin, int _columnBegin, int _rowEnd, int _columnEnd, Ship _ship) {
         //for each ships
-        for(Ship ship: ships) {
+        for (Ship ship : ships) {
             //if the ship being compared is not an installable ship and the ship isn't on the field yet
-            if(ship != _ship && ship.isPlaced()) {
+            if (ship != _ship && ship.isPlaced()) {
                 //find out if there are any coordinates of other ships near the one being placed
                 for (int i = _rowBegin - 1; i <= _rowEnd + 1; i++) {
-                    for (int j = _columnBegin - 1; j <= _columnEnd + 1 ; j++) {
-                        if((i == ship.getRowBegin() && j == ship.getColumnBegin()) ||
+                    for (int j = _columnBegin - 1; j <= _columnEnd + 1; j++) {
+                        if ((i == ship.getRowBegin() && j == ship.getColumnBegin()) ||
                                 (i == ship.getRowEnd() && j == ship.getColumnEnd())) {
                             System.out.println("Error! You placed it too close to another one. Try again:");
                             return false;
@@ -109,31 +111,81 @@ public class Battlefield {
     }
 
     /**
-     * Simplified method of shooting. For now just to pass the test.
+     * Extended method of shooting.
+     * The resulting coordinates of the shot are compared with the coordinates of each ship
+     * and if there is a hit - mark it in the ship's object.
      */
-    public void makeShot(){
-        System.out.println("The game starts!\n");
-        System.out.println(this.toString());
+    public void makeShot() {
+        System.out.println("The game starts!");
+        printBattlefield(true);
         System.out.println("Take a shot!");
         while (true) {
             String shotCell = scanner.nextLine();
             int shotRow = shotCell.charAt(0) - 65;
-            int shotColumn = Integer.parseInt(shotCell.substring(1)) - 1;
-            if (shotRow < 0 || shotRow > 9 || shotColumn < 0 || shotColumn > 9) {
+            int shotColumn = Integer.parseInt(shotCell.substring(1));
+            if (shotRow < 0 || shotRow > 9 || shotColumn < 1 || shotColumn > 10) {
                 System.out.println("Error! You entered the wrong coordinates! Try again:");
             } else {
-                if (this.filed[shotRow][shotColumn] == EMPTY) {
-                    this.filed[shotRow][shotColumn] = 'M';
-                    System.out.println(this.toString());
-                    System.out.println("You missed!");
-                } else {
-                    this.filed[shotRow][shotColumn] = 'X';
-                    System.out.println(this.toString());
-                    System.out.println("You hit a ship!");
+                boolean isHitOnShip = false;
+                for (Ship ship : ships) {
+                    if (shotRow == ship.rowBegin && shotRow == ship.rowEnd) {
+                        if (shotColumn >= ship.columnBegin && shotColumn <= ship.columnEnd) {
+                            ship.cells[shotColumn - ship.columnBegin] = HIT;
+                            isHitOnShip = true;
+                            break;
+                        }
+                    } else if (shotColumn == ship.columnBegin && shotColumn == ship.columnEnd) {
+                        if ((shotRow >= ship.rowBegin && shotRow <= ship.rowEnd)) {
+                            ship.cells[shotRow - ship.rowBegin] = HIT;
+                            isHitOnShip = true;
+                            break;
+                        }
+                    }
                 }
+                if (isHitOnShip) {
+                    printBattlefield(true);
+                    System.out.println("You hit a ship!");
+                } else {
+                    this.filed[shotRow][shotColumn - 1] = MISSED;
+                    printBattlefield(true);
+                    System.out.println("You missed!");
+                }
+                printBattlefield(false);
                 break;
             }
         }
+    }
+
+    /**
+     * We print the playing field with or without fog.
+     * Misses are store in the array of the playing field,
+     * and hits are extracted from the objects of ships.
+     * @param _fogOfWar - boolean, true if exist.
+     */
+    public void printBattlefield(boolean _fogOfWar) {
+
+        for (Ship ship : ships) {
+            if (ship.rowBegin == ship.rowEnd) {
+                for (int i = ship.columnBegin; i <= ship.columnEnd; i++) {
+                    // If the fog of war - we will substitute only hit symbols in the field
+                    // otherwise we take all the ship's symbols
+                    if (_fogOfWar) {
+                        this.filed[ship.rowBegin][i - 1] = ship.getCells()[i - ship.columnBegin] == SHIP ? EMPTY : ship.getCells()[i - ship.columnBegin];
+                    } else {
+                        this.filed[ship.rowBegin][i - 1] = ship.getCells()[i - ship.columnBegin];
+                    }
+                }
+            } else {
+                for (int i = ship.rowBegin; i <= ship.rowEnd; i++) {
+                    if (_fogOfWar) {
+                        this.filed[i][ship.columnBegin - 1] = ship.getCells()[i - ship.rowBegin] == SHIP ? EMPTY : ship.getCells()[i - ship.rowBegin];
+                    } else {
+                        this.filed[i][ship.columnBegin - 1] = ship.getCells()[i - ship.rowBegin];
+                    }
+                }
+            }
+        }
+        System.out.println(this.toString());
     }
 
     @Override
