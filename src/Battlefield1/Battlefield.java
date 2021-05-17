@@ -2,6 +2,9 @@ package Battlefield1;
 
 import java.util.Scanner;
 
+/**
+ * Class of the playing field.
+ */
 public class Battlefield {
     final int SIZE = 10;
     final int AIRCRAFT_SIZE = 5;
@@ -116,9 +119,6 @@ public class Battlefield {
      * and if there is a hit - mark it in the ship's object.
      */
     public void makeShot() {
-        System.out.println("The game starts!");
-        printBattlefield(true);
-        System.out.println("Take a shot!");
         while (true) {
             String shotCell = scanner.nextLine();
             int shotRow = shotCell.charAt(0) - 65;
@@ -126,32 +126,49 @@ public class Battlefield {
             if (shotRow < 0 || shotRow > 9 || shotColumn < 1 || shotColumn > 10) {
                 System.out.println("Error! You entered the wrong coordinates! Try again:");
             } else {
+
                 boolean isHitOnShip = false;
+                boolean isSankAShip = false;
+                boolean isEndGame = true;
+
                 for (Ship ship : ships) {
                     if (shotRow == ship.rowBegin && shotRow == ship.rowEnd) {
                         if (shotColumn >= ship.columnBegin && shotColumn <= ship.columnEnd) {
-                            ship.cells[shotColumn - ship.columnBegin] = HIT;
                             isHitOnShip = true;
+                            isSankAShip = ship.isFinalHit(shotColumn - ship.columnBegin, HIT);
                             break;
                         }
                     } else if (shotColumn == ship.columnBegin && shotColumn == ship.columnEnd) {
                         if ((shotRow >= ship.rowBegin && shotRow <= ship.rowEnd)) {
-                            ship.cells[shotRow - ship.rowBegin] = HIT;
                             isHitOnShip = true;
+                            isSankAShip = ship.isFinalHit(shotRow - ship.rowBegin, HIT);
                             break;
                         }
                     }
                 }
-                if (isHitOnShip) {
+
+                if (isHitOnShip && !isSankAShip) {
                     printBattlefield(true);
-                    System.out.println("You hit a ship!");
+                    System.out.println("You hit a ship! Try again:");
+                } else if (isSankAShip) {
+                    printBattlefield(true);
+                    for (Ship ship : ships) {
+                        if (!ship.isDead) {
+                            System.out.println("You sank a ship! Specify a new target:");
+                            isEndGame = false;
+                            break;
+                        }
+                    }
+                    if (isEndGame) {
+                        System.out.println("You sank the last ship. You won. Congratulations!");
+                        break;
+                    }
+
                 } else {
                     this.filed[shotRow][shotColumn - 1] = MISSED;
                     printBattlefield(true);
-                    System.out.println("You missed!");
+                    System.out.println("You missed! Try again:");
                 }
-                printBattlefield(false);
-                break;
             }
         }
     }
@@ -160,6 +177,7 @@ public class Battlefield {
      * We print the playing field with or without fog.
      * Misses are store in the array of the playing field,
      * and hits are extracted from the objects of ships.
+     *
      * @param _fogOfWar - boolean, true if exist.
      */
     public void printBattlefield(boolean _fogOfWar) {

@@ -2,12 +2,16 @@ package Battlefield1;
 
 import java.util.Arrays;
 
+/**
+ * Ship class. Use it to create as many ships as we want. With individual parameters.
+ */
 public class Ship {
     final char SHIP_SYMBOL = 'O';
     int size;
     String name;
     char[] cells;
-    boolean isPlaced;
+    boolean isPlaced = false;
+    boolean isDead = false;
     int rowBegin;
     int rowEnd;
     int columnBegin;
@@ -18,12 +22,11 @@ public class Ship {
      * @param _size - int, size of ship on game filed.
      * @param _name - String, name of ship.
      */
-
     public Ship(int _size, String _name) {
         this.size = _size;
         this.name = _name;
         this.cells = new char[_size];
-        Arrays.fill(this.cells,SHIP_SYMBOL);
+        Arrays.fill(this.cells, SHIP_SYMBOL);
     }
 
     public String getName() {
@@ -43,10 +46,9 @@ public class Ship {
      * @param _columnEnd - int, coordinates
      * @return -boolean, true if the coordinates meet the condition.
      */
-
     public boolean setCoordinates(int _rowBegin, int _columnBegin, int _rowEnd, int _columnEnd) {
-        if (_rowBegin == _rowEnd || _columnBegin == _columnEnd) {
-            if (_rowEnd - _rowBegin != this.size -1 && _columnEnd - _columnBegin != this.size - 1) {
+        if(_rowBegin == _rowEnd || _columnBegin == _columnEnd) {
+            if(_rowEnd - _rowBegin != this.size - 1 && _columnEnd - _columnBegin != this.size - 1) {
                 System.out.printf("Error! Wrong length of the %s! Try again:\n", this.name);
                 return false;
             }
@@ -59,6 +61,24 @@ public class Ship {
         this.columnBegin = _columnBegin;
         this.columnEnd = _columnEnd;
         this.isPlaced = true;
+
+        return true;
+    }
+
+    /**
+     * We record a hit to the object and check whether the ship is still alive
+     * @param _index - int, index of cell array this ship with shot.
+     * @param _HIT - char, symbol of hit.
+     * @return - boolean, true if in cell array no more symbol 'O', ship is dead
+     */
+    public boolean isFinalHit(int _index, char _HIT) {
+        this.cells[_index] = _HIT;
+        for (char each : cells) {
+            if (each != _HIT) {
+                return false;
+            }
+        }
+        this.isDead = true;
         return true;
     }
 
@@ -82,7 +102,7 @@ public class Ship {
         return columnEnd;
     }
 
-    public boolean isPlaced() {
+    public boolean isPlaced(){
         return isPlaced;
     }
 }
