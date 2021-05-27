@@ -3,8 +3,10 @@ package Battlefield1;
 
 public class Player {
     Battlefield battlefield;
+    String name;
 
-    public Player() {
+    public Player(String _name) {
         this.battlefield = new Battlefield();
+        this.name = _name;
     }
 }

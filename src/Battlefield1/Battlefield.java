@@ -118,59 +118,56 @@ public class Battlefield {
      * The resulting coordinates of the shot are compared with the coordinates of each ship
      * and if there is a hit - mark it in the ship's object.
      */
-    public void makeShot() {
-        while (true) {
-            String shotCell = scanner.nextLine();
-            int shotRow = shotCell.charAt(0) - 65;
-            int shotColumn = Integer.parseInt(shotCell.substring(1));
-            if (shotRow < 0 || shotRow > 9 || shotColumn < 1 || shotColumn > 10) {
-                System.out.println("Error! You entered the wrong coordinates! Try again:");
-            } else {
+    public boolean makeShot() {
+        String shotCell = scanner.nextLine();
+        int shotRow = shotCell.charAt(0) - 65;
+        int shotColumn = Integer.parseInt(shotCell.substring(1));
+        if (shotRow < 0 || shotRow > 9 || shotColumn < 1 || shotColumn > 10) {
+            System.out.println("Error! You entered the wrong coordinates! Try again:");
+        } else {
 
-                boolean isHitOnShip = false;
-                boolean isSankAShip = false;
-                boolean isEndGame = true;
+            boolean isHitOnShip = false;
+            boolean isSankAShip = false;
+            boolean isEndGame = true;
 
-                for (Ship ship : ships) {
-                    if (shotRow == ship.rowBegin && shotRow == ship.rowEnd) {
-                        if (shotColumn >= ship.columnBegin && shotColumn <= ship.columnEnd) {
-                            isHitOnShip = true;
-                            isSankAShip = ship.isFinalHit(shotColumn - ship.columnBegin, HIT);
-                            break;
-                        }
-                    } else if (shotColumn == ship.columnBegin && shotColumn == ship.columnEnd) {
-                        if ((shotRow >= ship.rowBegin && shotRow <= ship.rowEnd)) {
-                            isHitOnShip = true;
-                            isSankAShip = ship.isFinalHit(shotRow - ship.rowBegin, HIT);
-                            break;
-                        }
-                    }
-                }
-
-                if (isHitOnShip && !isSankAShip) {
-                    printBattlefield(true);
-                    System.out.println("You hit a ship! Try again:");
-                } else if (isSankAShip) {
-                    printBattlefield(true);
-                    for (Ship ship : ships) {
-                        if (!ship.isDead) {
-                            System.out.println("You sank a ship! Specify a new target:");
-                            isEndGame = false;
-                            break;
-                        }
-                    }
-                    if (isEndGame) {
-                        System.out.println("You sank the last ship. You won. Congratulations!");
+            for (Ship ship : ships) {
+                if (shotRow == ship.rowBegin && shotRow == ship.rowEnd) {
+                    if (shotColumn >= ship.columnBegin && shotColumn <= ship.columnEnd) {
+                        isHitOnShip = true;
+                        isSankAShip = ship.isFinalHit(shotColumn - ship.columnBegin, HIT);
                         break;
                     }
-
-                } else {
-                    this.filed[shotRow][shotColumn - 1] = MISSED;
-                    printBattlefield(true);
-                    System.out.println("You missed! Try again:");
+                } else if (shotColumn == ship.columnBegin && shotColumn == ship.columnEnd) {
+                    if ((shotRow >= ship.rowBegin && shotRow <= ship.rowEnd)) {
+                        isHitOnShip = true;
+                        isSankAShip = ship.isFinalHit(shotRow - ship.rowBegin, HIT);
+                        break;
+                    }
                 }
             }
+
+            if (isHitOnShip && !isSankAShip) {
+                System.out.println("You hit a ship!");
+            } else if (isSankAShip) {
+                for (Ship ship : ships) {
+                    if (!ship.isDead) {
+                        System.out.println("You sank a ship! Specify a new target:");
+                        isEndGame = false;
+                        break;
+                    }
+                }
+                if (isEndGame) {
+                    System.out.println("You sank the last ship. You won. Congratulations!");
+                    return true;
+                }
+
+            } else {
+                this.filed[shotRow][shotColumn - 1] = MISSED;
+                printBattlefield(true);
+                System.out.println("You missed!");
+            }
         }
+        return false;
     }
 
     /**
